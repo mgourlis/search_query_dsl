@@ -295,9 +295,9 @@ For large result sets, use `search_stream()` to process results one at a time wi
 ```python
 from search_query_dsl.api import search_stream
 
-# Stream from SQLAlchemy (uses server-side streaming)
+# Stream from SQLAlchemy with batching (recommended)
 async with async_session() as session:
-    async for user in search_stream(query, session, model=User):
+    async for user in search_stream(query, session, model=User, batch_size=100):
         await process(user)  # Process one at a time
 
 # Stream from in-memory collection
@@ -306,9 +306,26 @@ async for item in search_stream(query, items):
     await process(item)
 ```
 
+#### Batch Size
+
+The `batch_size` parameter controls how many rows are fetched from the database per round trip:
+
+| `batch_size` | Behavior | Use Case |
+|--------------|----------|----------|
+| `None` (default) | Row-by-row fetching | Minimal memory, many round trips |
+| `100-1000` | Batched fetching | **Recommended** - balanced performance |
+| Large value | More memory per batch | High-throughput scenarios |
+
+```python
+# Fetch 500 rows at a time, yield one at a time
+async for user in search_stream(query, session, User, batch_size=500):
+    process(user)
+```
+
 **Benefits:**
 - **Memory Efficient**: Doesn't load all results into memory at once.
 - **Server-Side Streaming**: SQLAlchemy backend uses `stream_scalars()` for true database-level streaming.
+- **Configurable Batching**: Tune `batch_size` to balance memory usage vs network round trips.
 - **Same Query Format**: Uses the exact same query structure as `search()`.
 
 ### In-Memory List Traversal

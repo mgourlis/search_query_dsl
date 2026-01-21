@@ -109,6 +109,7 @@ def _is_async_session(obj: Any) -> bool:
 async def search_stream(
     query: Union[SearchQuery, Dict, None],
     source: Iterable[Any],
+    batch_size: Optional[int] = None,
 ) -> AsyncGenerator[Any, None]:
     """Stream in-memory collection."""
     ...
@@ -120,6 +121,7 @@ async def search_stream(
     source: "AsyncSession",
     model: Type["DeclarativeBase"],
     stmt: Optional["Select"] = None,
+    batch_size: Optional[int] = None,
     **options: Any,
 ) -> AsyncGenerator[Any, None]:
     """Stream SQLAlchemy database results."""
@@ -131,6 +133,7 @@ async def search_stream(
     source: Any,
     model: Optional[Type["DeclarativeBase"]] = None,
     stmt: Optional["Select"] = None,
+    batch_size: Optional[int] = None,
     **options: Any,
 ) -> AsyncGenerator[Any, None]:
     """
@@ -146,15 +149,19 @@ async def search_stream(
             - List/Iterable: Uses Memory backend (yields filtered items)
         model: SQLAlchemy model class (required for SQLAlchemy)
         stmt: Optional base SQLAlchemy statement
+        batch_size: Number of items to process at a time.
+            - SQLAlchemy: Controls database fetch size (yield_per).
+            - Memory: Controls chunked iteration.
+            If None, yields items one at a time. Recommended: 100-1000.
         **options: Backend-specific options (e.g., hooks for SQLAlchemy)
     
     Yields:
         Individual matching results
     
     Examples:
-        # SQLAlchemy backend - stream from database
+        # SQLAlchemy backend - stream from database with batching
         async with async_session() as session:
-            async for user in search_stream(query, session, User):
+            async for user in search_stream(query, session, User, batch_size=100):
                 process(user)
         
         # Memory backend - stream filtered items
@@ -174,17 +181,24 @@ async def search_stream(
             raise ValueError("model is required for SQLAlchemy backend")
         
         backend = SQLAlchemyBackend(**options)
-        async for item in backend.stream(query, source, model, stmt):
+        async for item in backend.stream(query, source, model, stmt, batch_size):
             yield item
     
     else:
         # Default: treat as iterable (memory backend)
-        # For memory, we filter first then yield one at a time
+        # For memory, we filter first then yield in chunks (if batch_size set)
         from search_query_dsl.backends.memory import MemoryBackend
         
         results = await MemoryBackend(**options).search(query, source)
-        for item in results:
-            yield item
+        
+        if batch_size is not None:
+            # Chunked iteration for consistent behavior with SQLAlchemy backend
+            for i in range(0, len(results), batch_size):
+                for item in results[i:i + batch_size]:
+                    yield item
+        else:
+            for item in results:
+                yield item
 
 def get_supported_operators(backend: str = "all") -> dict:
     """

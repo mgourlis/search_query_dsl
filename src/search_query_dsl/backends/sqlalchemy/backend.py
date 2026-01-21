@@ -92,6 +92,7 @@ class SQLAlchemyBackend:
         session: "AsyncSession",
         model: Type["DeclarativeBase"],
         stmt: Optional["Select"] = None,
+        batch_size: Optional[int] = None,
     ) -> AsyncGenerator[Any, None]:
         """
         Apply query and stream results from session.
@@ -104,18 +105,26 @@ class SQLAlchemyBackend:
             session: SQLAlchemy AsyncSession
             model: SQLAlchemy model class
             stmt: Optional base statement (defaults to select(model))
+            batch_size: Number of rows to fetch from database at a time.
+                If None, fetches row-by-row. Recommended: 100-1000 for 
+                better performance (reduces database round trips).
         
         Yields:
             Individual matching model instances
             
         Example:
-            async for user in backend.stream(query, session, User):
+            async for user in backend.stream(query, session, User, batch_size=100):
                 process(user)
         """
         if stmt is None:
             stmt = select(model)
         
         stmt = await self.apply(query, stmt, model)
+        
+        # Apply yield_per for batched fetching
+        if batch_size is not None:
+            stmt = stmt.execution_options(yield_per=batch_size)
+        
         result = await session.stream_scalars(stmt)
         async for row in result:
             yield row
