@@ -447,6 +447,29 @@ async def search_items(query: SearchQuerySchema = Body(...)):
     return await search(search_query, session, model=Item)
 ```
 
+#### Streaming with FastAPI
+
+Use `StreamingResponse` for memory-efficient large result sets:
+
+```python
+from fastapi import Body
+from fastapi.responses import StreamingResponse
+from search_query_dsl.contrib.fastapi import SearchQuerySchema
+from search_query_dsl import search_stream, SearchQuery
+import json
+
+@app.post("/search/stream")
+async def stream_search(query: SearchQuerySchema = Body(...)):
+    search_query = SearchQuery.from_dict(query.model_dump())
+    
+    async def generate():
+        async with async_session() as session:
+            async for item in search_stream(search_query, session, model=Item):
+                yield json.dumps(item.to_dict()) + "\n"
+    
+    return StreamingResponse(generate(), media_type="application/x-ndjson")
+```
+
 ### Django
 
 Use the DRF integration for automatic serialization and validation:
@@ -478,6 +501,33 @@ class ManualSearchView(APIView):
         async with async_session() as session:
             results = await search(query, session, model=Item)
             return Response({"results": results})
+```
+
+#### Streaming with Django
+
+Use `StreamingHttpResponse` for large result sets:
+
+```python
+from django.http import StreamingHttpResponse
+from search_query_dsl import search_stream, SearchQuery
+import json
+
+class StreamSearchView(APIView):
+    async def post(self, request):
+        serializer = SearchQuerySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        query = SearchQuery.from_dict(serializer.validated_data)
+        
+        async def generate():
+            async with async_session() as session:
+                async for item in search_stream(query, session, model=Item):
+                    yield json.dumps(item.to_dict()) + "\n"
+        
+        return StreamingHttpResponse(
+            generate(),
+            content_type="application/x-ndjson"
+        )
 ```
 
 ## License
