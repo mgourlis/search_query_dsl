@@ -4,7 +4,7 @@ Unified API for Search Query DSL.
 Provides a single search() function that auto-detects the backend from the source type.
 """
 
-from typing import Any, Dict, Iterable, List, Optional, Type, Union, overload, TYPE_CHECKING
+from typing import Any, AsyncGenerator, Dict, Iterable, List, Optional, Type, Union, overload, TYPE_CHECKING
 
 from search_query_dsl.core.models import SearchQuery
 
@@ -103,6 +103,89 @@ def _is_async_session(obj: Any) -> bool:
     except ImportError:
         return False
 
+
+# Type overloads for search_stream
+@overload
+async def search_stream(
+    query: Union[SearchQuery, Dict, None],
+    source: Iterable[Any],
+) -> AsyncGenerator[Any, None]:
+    """Stream in-memory collection."""
+    ...
+
+
+@overload
+async def search_stream(
+    query: Union[SearchQuery, Dict, None],
+    source: "AsyncSession",
+    model: Type["DeclarativeBase"],
+    stmt: Optional["Select"] = None,
+    **options: Any,
+) -> AsyncGenerator[Any, None]:
+    """Stream SQLAlchemy database results."""
+    ...
+
+
+async def search_stream(
+    query: Union[SearchQuery, Dict, None],
+    source: Any,
+    model: Optional[Type["DeclarativeBase"]] = None,
+    stmt: Optional["Select"] = None,
+    **options: Any,
+) -> AsyncGenerator[Any, None]:
+    """
+    Streaming search function for memory-efficient processing of large result sets.
+    
+    Uses server-side streaming for SQLAlchemy backend.
+    For memory backend, yields items one at a time from filtered results.
+    
+    Args:
+        query: SearchQuery object, dict, or None
+        source: Data source:
+            - AsyncSession: Uses SQLAlchemy backend with server-side streaming
+            - List/Iterable: Uses Memory backend (yields filtered items)
+        model: SQLAlchemy model class (required for SQLAlchemy)
+        stmt: Optional base SQLAlchemy statement
+        **options: Backend-specific options (e.g., hooks for SQLAlchemy)
+    
+    Yields:
+        Individual matching results
+    
+    Examples:
+        # SQLAlchemy backend - stream from database
+        async with async_session() as session:
+            async for user in search_stream(query, session, User):
+                process(user)
+        
+        # Memory backend - stream filtered items
+        items = [{"status": "active"}, {"status": "inactive"}]
+        async for item in search_stream(query, items):
+            process(item)
+    """
+    # Convert dict to SearchQuery
+    if isinstance(query, dict):
+        query = SearchQuery.from_dict(query)
+    
+    # Detect backend by source type
+    if _is_async_session(source):
+        from search_query_dsl.backends.sqlalchemy import SQLAlchemyBackend
+        
+        if model is None:
+            raise ValueError("model is required for SQLAlchemy backend")
+        
+        backend = SQLAlchemyBackend(**options)
+        async for item in backend.stream(query, source, model, stmt):
+            yield item
+    
+    else:
+        # Default: treat as iterable (memory backend)
+        # For memory, we filter first then yield one at a time
+        from search_query_dsl.backends.memory import MemoryBackend
+        
+        results = await MemoryBackend(**options).search(query, source)
+        for item in results:
+            yield item
+
 def get_supported_operators(backend: str = "all") -> dict:
     """
     Get list of supported operators for specified backend(s).
@@ -139,7 +222,7 @@ def get_supported_operators(backend: str = "all") -> dict:
     return result
 
 
-__all__ = ["search", "get_supported_operators"]
+__all__ = ["search", "search_stream", "get_supported_operators"]
 
 
 

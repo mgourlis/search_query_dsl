@@ -3,6 +3,7 @@
 A **Domain-Specific Language (DSL)** for expressing complex database queries as JSON with support for:
 
 - ✅ **Unified API**: Single `search()` function for both Memory and SQLAlchemy backends.
+- ✅ **Streaming Support**: Memory-efficient `search_stream()` for large result sets.
 - ✅ **Nested Logic**: Complex boolean expressions (AND, OR, NOT).
 - ✅ **Relationship Traversal**: Automatic, robust JOINs with alias handling.
 - ✅ **Pagination & Ordering**: Full support for `limit`, `offset`, and multi-field `order_by`.
@@ -24,6 +25,7 @@ A **Domain-Specific Language (DSL)** for expressing complex database queries as 
   - [Geospatial Queries](#geospatial-queries)
   - [Full-Text Search](#full-text-search)
   - [Pagination & Ordering](#pagination--ordering)
+  - [Streaming Results](#streaming-results)
 - [JSON Structure](#json-structure)
 - [Supported Operators](#supported-operators)
 - [Performance Tips](#performance-tips)
@@ -285,6 +287,29 @@ query = (
 ```
 
 **Note**: Prefix field names with `-` for descending order.
+
+### Streaming Results
+
+For large result sets, use `search_stream()` to process results one at a time without loading everything into memory:
+
+```python
+from search_query_dsl.api import search_stream
+
+# Stream from SQLAlchemy (uses server-side streaming)
+async with async_session() as session:
+    async for user in search_stream(query, session, model=User):
+        await process(user)  # Process one at a time
+
+# Stream from in-memory collection
+items = [{"status": "active", "priority": 10}, {"status": "inactive"}]
+async for item in search_stream(query, items):
+    await process(item)
+```
+
+**Benefits:**
+- **Memory Efficient**: Doesn't load all results into memory at once.
+- **Server-Side Streaming**: SQLAlchemy backend uses `stream_scalars()` for true database-level streaming.
+- **Same Query Format**: Uses the exact same query structure as `search()`.
 
 ### In-Memory List Traversal
 

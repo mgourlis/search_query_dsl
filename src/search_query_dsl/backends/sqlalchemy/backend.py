@@ -4,7 +4,7 @@ SQLAlchemy backend for database querying.
 Supports statement modification and direct execution via AsyncSession.
 """
 
-from typing import Any, Dict, List, Optional, Type, Callable, Union, TYPE_CHECKING
+from typing import Any, AsyncGenerator, Dict, List, Optional, Type, Callable, Union, TYPE_CHECKING
 
 from sqlalchemy import and_, or_, not_, select
 from sqlalchemy.orm import RelationshipProperty, aliased
@@ -85,6 +85,40 @@ class SQLAlchemyBackend:
         stmt = await self.apply(query, stmt, model)
         result = await session.execute(stmt)
         return list(result.scalars().all())
+    
+    async def stream(
+        self,
+        query: Optional[SearchQuery],
+        session: "AsyncSession",
+        model: Type["DeclarativeBase"],
+        stmt: Optional["Select"] = None,
+    ) -> AsyncGenerator[Any, None]:
+        """
+        Apply query and stream results from session.
+        
+        Uses server-side streaming to avoid loading all results into memory.
+        Ideal for processing large result sets.
+        
+        Args:
+            query: SearchQuery to apply
+            session: SQLAlchemy AsyncSession
+            model: SQLAlchemy model class
+            stmt: Optional base statement (defaults to select(model))
+        
+        Yields:
+            Individual matching model instances
+            
+        Example:
+            async for user in backend.stream(query, session, User):
+                process(user)
+        """
+        if stmt is None:
+            stmt = select(model)
+        
+        stmt = await self.apply(query, stmt, model)
+        result = await session.stream_scalars(stmt)
+        async for row in result:
+            yield row
     
     async def apply(
         self,
