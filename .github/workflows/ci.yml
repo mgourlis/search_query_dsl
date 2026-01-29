@@ -13,6 +13,21 @@ jobs:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
 
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_DB: search_query_dsl_demo_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
     - uses: actions/checkout@v4
     
@@ -28,6 +43,8 @@ jobs:
         pip install ".[all]"
         
     - name: Run tests with coverage
+      env:
+        DATABASE_URL: postgresql+asyncpg://postgres:password@localhost:5432/search_query_dsl_demo_db
       run: |
         pytest --cov=src/search_query_dsl --cov-report=xml
         

@@ -31,7 +31,7 @@ except ImportError:
 # Database URL - can be overridden by environment variable
 DATABASE_URL = os.environ.get(
     "DATABASE_URL",
-    "postgresql+asyncpg://postgres:123456@192.168.1.131:5432/search_query_dsl_demo_db"
+    "postgresql+asyncpg://postgres:123456@localhost:5432/search_query_dsl_demo_db"
 )
 
 
