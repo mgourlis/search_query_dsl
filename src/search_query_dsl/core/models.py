@@ -135,6 +135,37 @@ class SearchQuery:
     def is_empty(self) -> bool:
         """Check if the query has no conditions."""
         return not self.groups or all(not g.conditions for g in self.groups)
+    
+    def merge(self, other: "SearchQuery") -> "SearchQuery":
+        """
+        Merge another SearchQuery into this one using AND logic.
+        
+        Both queries' groups are combined. Since groups are ANDed together,
+        this effectively creates: (self conditions) AND (other conditions).
+        
+        Pagination (limit/offset) from self takes precedence.
+        Order by from self takes precedence if set.
+        
+        Use case: Merging user search queries with authorization filters.
+        
+        Args:
+            other: Another SearchQuery to merge
+            
+        Returns:
+            New SearchQuery with combined conditions
+            
+        Example:
+            user_query = SearchQuery(groups=[...user filters...])
+            auth_query = SearchQuery(groups=[...authorization conditions...])
+            combined = user_query.merge(auth_query)
+            # Result: user filters AND authorization conditions
+        """
+        return SearchQuery(
+            groups=self.groups + other.groups,
+            limit=self.limit if self.limit is not None else other.limit,
+            offset=self.offset if self.offset is not None else other.offset,
+            order_by=self.order_by if self.order_by is not None else other.order_by,
+        )
 
     def to_dict(self) -> dict:
         result = {
