@@ -46,7 +46,7 @@ jobs:
       env:
         DATABASE_URL: postgresql+asyncpg://postgres:password@localhost:5432/search_query_dsl_demo_db
       run: |
-        pytest --cov=src/search_query_dsl --cov-report=xml
+        pytest --cov=search_query_dsl --cov-report=xml
         
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
