@@ -50,7 +50,6 @@ from search_query_dsl.backends.sqlalchemy.operators.jsonb import (
     JsonbHasAnyKeysOperator,
     JsonbHasAllKeysOperator,
     JsonbPathExistsOperator,
-    JsonbPathExistsOperator,
 )
 from search_query_dsl.backends.sqlalchemy.operators.geometry import (
     DisjointOperator,

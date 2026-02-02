@@ -1,13 +1,11 @@
 """Tests for SearchQueryBuilder."""
 
-import pytest
 from search_query_dsl.core.builder import SearchQueryBuilder
-from search_query_dsl.core.models import SearchCondition, SearchQueryGroup
+from search_query_dsl.core.models import SearchQueryGroup
 
 
 class TestSearchQueryBuilder:
     """Tests for SearchQueryBuilder."""
-    
     def test_simple_condition(self):
         query = (
             SearchQueryBuilder()

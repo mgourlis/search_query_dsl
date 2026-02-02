@@ -7,8 +7,7 @@ Operators: jsonb_contains, jsonb_contained_by, jsonb_has_key, jsonb_has_any_keys
 import json
 from typing import Any, Optional
 
-from sqlalchemy import func, cast, Text
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import func, literal_column
 
 from search_query_dsl.backends.sqlalchemy.base import SQLAlchemyOperator
 from search_query_dsl.core.utils import _parse_list_value
@@ -19,7 +18,6 @@ class JsonbContainsOperator(SQLAlchemyOperator):
     name = "jsonb_contains"
     
     def apply(self, column, condition_value: Any, value_type: Optional[str] = None, **kwargs):
-        from sqlalchemy import literal_column
         
         if isinstance(condition_value, (dict, list)):
             json_val = json.dumps(condition_value)
@@ -36,7 +34,6 @@ class JsonbContainedByOperator(SQLAlchemyOperator):
     name = "jsonb_contained_by"
     
     def apply(self, column, condition_value: Any, value_type: Optional[str] = None, **kwargs):
-        from sqlalchemy import literal_column
         
         if isinstance(condition_value, (dict, list)):
             json_val = json.dumps(condition_value)
@@ -60,7 +57,6 @@ class JsonbHasAnyKeysOperator(SQLAlchemyOperator):
     name = "jsonb_has_any_keys"
     
     def apply(self, column, condition_value: Any, value_type: Optional[str] = None, **kwargs):
-        from sqlalchemy import literal_column
         
         # Parse string values into list
         if isinstance(condition_value, str):
@@ -80,7 +76,6 @@ class JsonbHasAllKeysOperator(SQLAlchemyOperator):
     name = "jsonb_has_all_keys"
     
     def apply(self, column, condition_value: Any, value_type: Optional[str] = None, **kwargs):
-        from sqlalchemy import literal_column
         
         # Parse string values into list
         if isinstance(condition_value, str):
@@ -101,5 +96,4 @@ class JsonbPathExistsOperator(SQLAlchemyOperator):
     
     def apply(self, column, value: Any, value_type: Optional[str] = None, **kwargs) -> Any:
         """Check if a JSON path exists in the JSONB column."""
-        from sqlalchemy import func
         return func.jsonb_path_exists(column, value)

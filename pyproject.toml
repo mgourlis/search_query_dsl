@@ -30,7 +30,7 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
-sqlalchemy = ["sqlalchemy>=2.0"]
+sqlalchemy = ["sqlalchemy>=2.0", "aiosqlite>=0.17", "asyncpg>=0.28"]
 geoalchemy = [
     "sqlalchemy>=2.0",
     "geoalchemy2>=0.14",

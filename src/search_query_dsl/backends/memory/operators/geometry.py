@@ -178,7 +178,6 @@ class DisjointOperator(MemoryOperator):
     def evaluate(self, field_value: Any, condition_value: Any, value_type: Optional[str] = None) -> bool:
         """Check if geometries are disjoint using shapely."""
         try:
-            from shapely import geometry as geom
             from shapely.geometry import shape
         except ImportError:
             raise ImportError("shapely is required for geometry operations in memory backend")

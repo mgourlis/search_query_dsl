@@ -4,7 +4,7 @@ Resolution hooks for field path resolution.
 Provides base context and result types for backend-specific hooks.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Generic, Optional, TypeVar, List
 
 T = TypeVar('T')

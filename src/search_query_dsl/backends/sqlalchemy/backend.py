@@ -4,10 +4,10 @@ SQLAlchemy backend for database querying.
 Supports statement modification and direct execution via AsyncSession.
 """
 
-from typing import Any, AsyncGenerator, Dict, List, Optional, Type, Callable, Union, TYPE_CHECKING
+from typing import Any, AsyncGenerator, Dict, List, Type, Callable, TYPE_CHECKING, Optional
 
 from sqlalchemy import and_, or_, not_, select
-from sqlalchemy.orm import RelationshipProperty, aliased
+from sqlalchemy.orm import aliased
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.inspection import inspect
 
@@ -265,7 +265,6 @@ class SQLAlchemyBackend:
         
         parts = field_path.split('.')
         current_model = model
-        base_model = model
         path_so_far = []
         
         for idx, part in enumerate(parts):

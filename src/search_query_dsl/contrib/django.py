@@ -4,12 +4,9 @@ Django REST Framework integration for Search Query DSL.
 Provides serializers and view mixins for easy integration with DRF.
 """
 
-from typing import Optional, List, Dict, Any
-
 try:
     from rest_framework import serializers
     from rest_framework.request import Request
-    from rest_framework.response import Response
 except ImportError:
     raise ImportError(
         "Django REST Framework is required for django contrib. "

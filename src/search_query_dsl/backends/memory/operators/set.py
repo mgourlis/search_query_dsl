@@ -4,7 +4,7 @@ Set/list operators for memory backend.
 Operators: in, not_in, between, not_between, all
 """
 
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from search_query_dsl.backends.memory.base import MemoryOperator
 from search_query_dsl.core.utils import cast_value, _parse_list_value

@@ -3,7 +3,7 @@ SQLAlchemy-specific resolution context for field resolution hooks.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional, Type, List, TYPE_CHECKING
+from typing import Any, Dict, Optional, Type, TYPE_CHECKING
 
 from search_query_dsl.core.hooks import ResolutionContext
 

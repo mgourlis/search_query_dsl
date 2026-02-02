@@ -64,8 +64,6 @@ from search_query_dsl.backends.memory.operators.geometry import (
     DisjointOperator,
     BboxIntersectsOperator,
 )
-from search_query_dsl.backends.memory.operators.null import IsNullOperator, IsNotNullOperator
-from search_query_dsl.backends.memory.operators.set import InOperator, NotInOperator, BetweenOperator, NotBetweenOperator, AllOperator
 from search_query_dsl.backends.memory.operators.fts import FtsOperator, FtsPhraseOperator
 
 # Operator registry: maps operator name to operator instance

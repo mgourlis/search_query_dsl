@@ -8,7 +8,7 @@ This is a lightweight utility primarily used internally by the InMemoryEvaluator
 but can also be used standalone for field resolution.
 """
 
-from typing import Any, List, Optional
+from typing import Any, List
 
 
 def resolve_field(obj: Any, field_path: str) -> Any:

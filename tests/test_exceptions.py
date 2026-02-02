@@ -1,6 +1,5 @@
 """Tests for core exceptions."""
 
-import pytest
 from search_query_dsl.core.exceptions import (
     FieldValidationError,
     FieldNotQueryableError,
